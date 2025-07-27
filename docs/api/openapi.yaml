@@ -635,8 +635,6 @@ components:
           type: string
         description:
           type: string
-        author_id:
-          type: integer
         author:
           $ref: '#/components/schemas/Author'
         language:
@@ -646,13 +644,7 @@ components:
           $ref: '#/components/schemas/BuddhistTradition'
         difficulty_level:
           $ref: '#/components/schemas/DifficultyLevel'
-        tags:
-          type: array
-          items:
-            type: string
         featured:
-          type: boolean
-        is_active:
           type: boolean
         estimated_daily_minutes:
           type: integer
@@ -661,13 +653,6 @@ components:
           format: uri
         preview_content:
           type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
     PlanDetail:
       allOf:
         - $ref: '#/components/schemas/Plan'
@@ -965,10 +950,6 @@ components:
         image_url:
           type: string
           format: uri
-        is_verified:
-          type: boolean
-        is_active:
-          type: boolean
 
     AuthorDetail:
       allOf:
