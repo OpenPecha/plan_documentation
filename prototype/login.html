@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buddhist Reading Plans CMS - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-200) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-lg);
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-modal);
+            padding: var(--space-2xl);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-logo {
+            margin-bottom: var(--space-xl);
+        }
+        
+        .login-logo i {
+            font-size: 48px;
+            color: var(--saffron);
+            margin-bottom: var(--space-md);
+        }
+        
+        .login-logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .login-logo p {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+        
+        .login-form {
+            text-align: left;
+        }
+        
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        .form-input.error {
+            border-color: var(--error-red);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .login-btn:hover {
+            background: #1D4ED8;
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .login-btn:disabled {
+            background: var(--gray-300);
+            cursor: not-allowed;
+        }
+        
+        .login-btn.loading {
+            position: relative;
+            color: transparent;
+        }
+        
+        .login-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .forgot-password {
+            text-align: center;
+            margin-top: var(--space-md);
+        }
+        
+        .forgot-password a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .forgot-password a:hover {
+            color: #1D4ED8;
+        }
+        
+        .error-message {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: var(--error-red);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: var(--space-lg);
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-om"></i>
+                <h1>Buddhist Plans CMS</h1>
+                <p>Content Management System</p>
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                Invalid email or password. Please try again.
+            </div>
+            
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-input" 
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-input" 
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="forgot-password">
+                <a href="#" id="forgotPassword">Forgot your password?</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Clear previous errors
+                errorMessage.classList.remove('show');
+                emailInput.classList.remove('error');
+                passwordInput.classList.remove('error');
+                
+                // Get form data
+                const email = emailInput.value.trim();
+                const password = passwordInput.value.trim();
+                
+                // Basic validation
+                if (!email || !password) {
+                    showError('Please fill in all fields');
+                    return;
+                }
+                
+                // Show loading state
+                loginBtn.classList.add('loading');
+                loginBtn.disabled = true;
+                
+                // Simulate login request
+                setTimeout(() => {
+                    // Demo credentials
+                    if (email === 'sarah@buddhist-plans.com' && password === 'demo123') {
+                        // Success - redirect to dashboard
+                        window.location.href = 'index.html';
+                    } else {
+                        // Show error
+                        showError('Invalid email or password. Please try again.');
+                        emailInput.classList.add('error');
+                        passwordInput.classList.add('error');
+                    }
+                    
+                    // Remove loading state
+                    loginBtn.classList.remove('loading');
+                    loginBtn.disabled = false;
+                }, 1500);
+            });
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+            }
+            
+            // Demo credentials hint
+            setTimeout(() => {
+                const hint = document.createElement('div');
+                hint.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: var(--primary-blue);
+                    color: white;
+                    padding: 12px 16px;
+                    border-radius: var(--radius-md);
+                    font-size: 12px;
+                    box-shadow: var(--shadow-modal);
+                    max-width: 250px;
+                `;
+                hint.innerHTML = `
+                    <strong>Demo Credentials:</strong><br>
+                    Email: sarah@buddhist-plans.com<br>
+                    Password: demo123
+                `;
+                document.body.appendChild(hint);
+                
+                // Auto remove after 10 seconds
+                setTimeout(() => {
+                    hint.style.opacity = '0';
+                    setTimeout(() => hint.remove(), 300);
+                }, 10000);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

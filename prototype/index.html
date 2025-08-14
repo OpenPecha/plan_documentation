@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buddhist Reading Plans CMS - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-om"></i>
+                <span>Buddhist Plans CMS</span>
+            </div>
+            <div class="header-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search plans...">
+                </div>
+                <div class="user-menu">
+                    <div class="user-avatar">
+                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face" alt="Sarah Chen">
+                    </div>
+                    <span class="user-name">Sarah Chen</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <button class="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Title -->
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p class="page-subtitle">Welcome back, Sarah. Here's what's happening with your plans.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">My Plans</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon assigned">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Assigned to Me</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon featured">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">Featured Plans</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon analytics">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">1.2k</div>
+                        <div class="stat-label">Total Enrollments</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2>Quick Actions</h2>
+                <div class="action-buttons">
+                    <button class="action-btn primary">
+                        <i class="fas fa-plus"></i>
+                        Create New Plan
+                    </button>
+                    <button class="action-btn secondary">
+                        <i class="fas fa-folder"></i>
+                        Media Library
+                    </button>
+                    <button class="action-btn secondary">
+                        <i class="fas fa-list"></i>
+                        View All Plans
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h2>Recent Activity</h2>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon updated">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">"Mindfulness Basics" updated by Sarah Chen</div>
+                            <div class="activity-time">2 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon published">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">"Buddhist Ethics" published by Mike Johnson</div>
+                            <div class="activity-time">4 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon assigned">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">"Loving Kindness" assigned to Sarah Chen</div>
+                            <div class="activity-time">1 day ago</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon created">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">"Zen Meditation" created by Lisa Wong</div>
+                            <div class="activity-time">2 days ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Navigation Menu (for other pages) -->
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="plans.html" class="nav-item">
+            <i class="fas fa-book"></i>
+            <span>My Plans</span>
+        </a>
+        <a href="create.html" class="nav-item">
+            <i class="fas fa-plus"></i>
+            <span>Create</span>
+        </a>
+        <a href="media.html" class="nav-item">
+            <i class="fas fa-folder"></i>
+            <span>Media</span>
+        </a>
+        <a href="analytics.html" class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>Analytics</span>
+        </a>
+    </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>
