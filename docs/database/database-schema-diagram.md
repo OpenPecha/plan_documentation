@@ -110,7 +110,7 @@ erDiagram
         difficulty_level difficulty_level
         jsonb tags
         boolean featured
-        integer estimated_daily_minutes
+        integer number_of_days
     }
 
     plan_items {
@@ -119,18 +119,16 @@ erDiagram
         integer day_number
         varchar title
         text description
-        integer estimated_duration
     }
 
     tasks {
         bigint id PK
         bigint plan_item_id FK
+        text title
         content_type content_type
         text content
         integer display_order
-        boolean is_required
-        text instruction
-        text reflection_prompt
+        integer estimated_duration
     }
 
     user_plan_progress {
