@@ -40,10 +40,6 @@ paths:
       summary: Get all plans with filtering and pagination
       security: []
       parameters:
-        - name: tradition
-          in: query
-          schema:
-            $ref: '#/components/schemas/BuddhistTradition'
         - name: difficulty_level
           in: query
           schema:
@@ -574,17 +570,6 @@ components:
 
   schemas:
     # Enums
-    BuddhistTradition:
-      type: string
-      enum:
-        - theravada
-        - mahayana
-        - vajrayana
-        - zen
-        - pure_land
-        - nichiren
-        - general
-
     DifficultyLevel:
       type: string
       enum:
@@ -640,19 +625,20 @@ components:
         language:
           type: string
           example: "en"
-        tradition:
-          $ref: '#/components/schemas/BuddhistTradition'
         difficulty_level:
           $ref: '#/components/schemas/DifficultyLevel'
+        tags:
+          type: array
+          items:
+            type: string
         featured:
           type: boolean
-        estimated_daily_minutes:
-          type: integer
+        is_active:
+          type: boolean
         image_url:
           type: string
           format: uri
-        preview_content:
-          type: string
+
     PlanDetail:
       allOf:
         - $ref: '#/components/schemas/Plan'
@@ -682,25 +668,17 @@ components:
         language:
           type: string
           default: "en"
-        tradition:
-          $ref: '#/components/schemas/BuddhistTradition'
         difficulty_level:
           $ref: '#/components/schemas/DifficultyLevel'
         tags:
           type: array
           items:
             type: string
-        estimated_daily_minutes:
-          type: integer
-          minimum: 1
         image_url:
           type: string
           format: uri
-        preview_content:
-          type: string
       required:
         - title
-        - tradition
         - difficulty_level
 
     PlanUpdate:
@@ -712,8 +690,6 @@ components:
           maxLength: 255
         description:
           type: string
-        tradition:
-          $ref: '#/components/schemas/BuddhistTradition'
         difficulty_level:
           $ref: '#/components/schemas/DifficultyLevel'
         tags:
@@ -724,14 +700,9 @@ components:
           type: boolean
         is_active:
           type: boolean
-        estimated_daily_minutes:
-          type: integer
-          minimum: 1
         image_url:
           type: string
           format: uri
-        preview_content:
-          type: string
 
     PaginatedPlans:
       type: object
@@ -759,15 +730,6 @@ components:
           type: integer
         day_number:
           type: integer
-        title:
-          type: string
-        description:
-          type: string
-        date:
-          type: string
-          format: date
-        estimated_duration:
-          type: integer
         created_at:
           type: string
           format: date-time
@@ -786,17 +748,6 @@ components:
       type: object
       properties:
         day_number:
-          type: integer
-          minimum: 1
-        title:
-          type: string
-          maxLength: 255
-        description:
-          type: string
-        date:
-          type: string
-          format: date
-        estimated_duration:
           type: integer
           minimum: 1
       required:
@@ -820,10 +771,6 @@ components:
           type: integer
         is_required:
           type: boolean
-        instruction:
-          type: string
-        reflection_prompt:
-          type: string
         is_completed:
           type: boolean
           description: "Only present when user is authenticated"
@@ -856,17 +803,10 @@ components:
         started_at:
           type: string
           format: date-time
-        completion_percentage:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 100
         streak_count:
           type: integer
         longest_streak:
           type: integer
-        favorite:
-          type: boolean
         status:
           $ref: '#/components/schemas/UserPlanStatus'
         is_completed:
@@ -881,10 +821,22 @@ components:
     UserPlanProgressUpdate:
       type: object
       properties:
-        favorite:
-          type: boolean
         status:
           $ref: '#/components/schemas/UserPlanStatus'
+
+    # Favorites Schemas
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        plan_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
 
     # Review Schemas
     Review:
@@ -947,9 +899,16 @@ components:
           type: integer
         name:
           type: string
+        email:
+          type: string
+          format: email
         image_url:
           type: string
           format: uri
+        is_verified:
+          type: boolean
+        is_active:
+          type: boolean
 
     AuthorDetail:
       allOf:
@@ -1095,3 +1054,5 @@ tags:
     description: Plan reviews and ratings
   - name: Authors
     description: Content authors and teachers
+  - name: Favorites
+    description: User plan favorites

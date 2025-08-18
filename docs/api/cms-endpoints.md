@@ -77,7 +77,7 @@ Get plans for the authenticated user (Author) or all plans (Admin).
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20)
 - `search`: Search in title/description
-- `tradition`: Filter by Buddhist tradition
+- `difficulty_level`: Filter by difficulty
 - `author_id`: Filter by author (Admin only)
 
 **Response:**
@@ -88,8 +88,6 @@ Get plans for the authenticated user (Author) or all plans (Admin).
       "id": "plan_123",
       "title": "Introduction to Meditation",
       "status": "published",
-      "duration_days": 21,
-      "tradition": "general",
       "difficulty_level": "beginner",
       "enrollments": 342,
       "average_rating": 4.5,
@@ -119,12 +117,8 @@ Create a new plan.
 {
   "title": "Mindfulness in Daily Life",
   "description": "A 14-day journey into integrating mindfulness...",
-  "duration_days": 14,
-  "tradition": "general",
   "difficulty_level": "beginner",
-  "practice_type": "meditation",
   "tags": ["mindfulness", "daily_practice", "beginner"],
-  "unlock_condition": "sequential",
   "is_featured": false,
   "visibility": "public"
 }
@@ -151,21 +145,14 @@ Get detailed plan information for editing.
   "title": "Introduction to Meditation",
   "description": "A comprehensive guide...",
   "status": "published",
-  "duration_days": 21,
-  "tradition": "general",
   "difficulty_level": "beginner",
-  "practice_type": "meditation",
   "tags": ["meditation", "beginner"],
-  "unlock_condition": "sequential",
   "is_featured": false,
   "visibility": "public",
   "plan_items": [
     {
       "id": "item_001",
       "day_number": 1,
-      "title": "What is Meditation?",
-      "description": "Introduction to meditation concepts",
-      "unlock_condition": "sequential",
       "tasks": [
         {
           "id": "task_001",
@@ -173,9 +160,10 @@ Get detailed plan information for editing.
           "title": "Read: Basics of Meditation",
           "content": {
             "text": "Meditation is the practice of...",
-            "estimated_duration": 10
+            "estimated_time": 10
           },
-          "order": 1
+          "order": 1,
+          "is_required": true
         }
       ]
     }
@@ -210,9 +198,6 @@ Add a new daily item to a plan.
 ```json
 {
   "day_number": 5,
-  "title": "Loving-Kindness Meditation",
-  "description": "Practice sending love and compassion",
-  "unlock_condition": "sequential",
   "tasks": [
     {
       "type": "audio",
@@ -222,18 +207,18 @@ Add a new daily item to a plan.
         "duration": 1200,
         "transcript": "Begin by finding a comfortable position..."
       },
-      "order": 1
+      "order": 1,
+      "is_required": true
     },
     {
-      "type": "reflection",
+      "type": "text",
       "title": "Reflection Questions",
       "content": {
-        "questions": [
-          "How did you feel during the meditation?",
-          "What challenges did you encounter?"
-        ]
+        "text": "How did you feel during the meditation?\nWhat challenges did you encounter?",
+        "estimated_time": 5
       },
-      "order": 2
+      "order": 2,
+      "is_required": false
     }
   ]
 }

@@ -199,7 +199,7 @@ CREATE INDEX idx_authors_verified ON authors(is_verified) WHERE is_verified = TR
 ```
 ### 8. Favorite
 ```sql
-CREATE TABLE authors (
+CREATE TABLE favorites (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     plan_id BIGINT REFERENCES plans(id) ON DELETE CASCADE,
@@ -209,7 +209,7 @@ CREATE TABLE authors (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_authors_verified ON authors(is_verified) WHERE is_verified = TRUE;
+CREATE INDEX idx_favorites_user_plan ON favorites(user_id, plan_id);
 ```
     
 
@@ -223,9 +223,9 @@ CREATE INDEX idx_authors_verified ON authors(is_verified) WHERE is_verified = TR
 - ✅ **user_task_completion** - Granular task completion tracking
 - ✅ **plan_reviews** - User ratings and feedback system
 - ✅ **authors** - Buddhist teachers and content creators
+- ✅ **favorites** - User's favorite plans
 
 ### **Simplified Categorization System:**
-- ✅ **tradition** enum for Buddhist schools (theravada, mahayana, vajrayana, etc.)
 - ✅ **difficulty_level** enum for user matching (beginner, intermediate, advanced)
 - ✅ **tags** JSONB field for flexible categorization (covers practice types, life situations, content types)
 - ✅ **featured** flag for admin-curated plan promotion
@@ -234,7 +234,6 @@ CREATE INDEX idx_authors_verified ON authors(is_verified) WHERE is_verified = TR
 - ✅ **estimated_daily_minutes** for time planning
 - ✅ **preview_content** for plan discovery
 - ✅ **streak_count** and **longest_streak** for engagement
-- ✅ **reflection_prompt** for contemplation guidance
 - ✅ **multiple content types** (text, audio, video, image, source_reference)
 
 ### **Performance & Search:**

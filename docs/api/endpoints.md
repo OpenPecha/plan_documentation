@@ -45,7 +45,7 @@ This document provides detailed information about the Buddhist Reading Plans API
 ### **Plan Discovery**
 ```
 1. GET /plans → Browse all plans with filtering
-   - Filter by tradition, difficulty, tags
+   - Filter by difficulty, tags, is_active, featured, search
    - Search by title/description
    - Paginated results
 
@@ -66,15 +66,22 @@ This document provides detailed information about the Buddhist Reading Plans API
 
 2. GET /users/me/plans → View enrolled plans
    - Filter by status (active, completed, etc.)
-   - Shows progress percentage and streaks
+   - Shows streaks and status
 
 3. GET /plans/{id}/items/{day} → Get specific day content
    - Returns tasks for the day
    - Includes completion status if user is authenticated
 
 4. POST /users/me/tasks/{id}/complete → Mark task as done
-   - Updates completion tracking
-   - Recalculates plan progress and streaks
+   - Updates task completion tracking
+   - Updates streaks
+```
+
+### **Favorites**
+```
+1. GET /users/me/favorites → List favorite plans
+2. POST /plans/{id}/favorite → Favorite a plan
+3. DELETE /plans/{id}/favorite → Unfavorite a plan
 ```
 
 ### **Content Management (Admin/Author)**
@@ -150,14 +157,14 @@ All list endpoints use consistent pagination:
 
 ### **Plan Filtering**
 ```
-GET /plans?tradition=zen&difficulty_level=beginner&tags=meditation,mindfulness
+GET /plans?difficulty_level=beginner&tags=meditation,mindfulness&is_active=true&featured=false
 ```
 
 **Available filters:**
-- `tradition`: Buddhist tradition enum
 - `difficulty_level`: Beginner, intermediate, advanced
 - `tags`: Comma-separated tag list
 - `featured`: Boolean for featured plans
+- `is_active`: Boolean to include active plans only
 - `search`: Full-text search in title/description
 
 ### **Search Implementation**
@@ -168,21 +175,11 @@ GET /plans?tradition=zen&difficulty_level=beginner&tags=meditation,mindfulness
 
 ## Progress Tracking
 
-### **Completion Calculation**
-```
-completion_percentage = (completed_tasks / total_required_tasks) * 100
-```
-
 ### **Streak Calculation**
 - **Daily streak**: Consecutive days with at least one task completed
 - **Plan-specific**: Each plan maintains its own streak
 - **Reset conditions**: Missing a day resets streak to 0
 - **Longest streak**: Historical maximum streak for motivation
-
-### **Progress Updates**
-- Automatic calculation when tasks are completed/uncompleted
-- Real-time updates via API responses
-- Cached for performance (invalidated on changes)
 
 ## Content Types
 
@@ -215,7 +212,7 @@ completion_percentage = (completed_tasks / total_required_tasks) * 100
 
 ### **Access Control**
 - **Public**: Plan browsing, author info
-- **User**: Personal progress, task completion, reviews
+- **User**: Personal progress, task completion, reviews, favorites
 - **Author**: Create/edit own plans and content
 - **Admin**: Full system access, user management
 
@@ -264,7 +261,7 @@ completion_percentage = (completed_tasks / total_required_tasks) * 100
 ### **Key Metrics**
 - API response times and error rates
 - User engagement (daily active users, session length)
-- Plan completion rates by tradition/difficulty
+- Plan completion rates by difficulty/tags
 - Popular content and search terms
 
 ### **Health Monitoring**
