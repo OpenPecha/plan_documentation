@@ -638,6 +638,10 @@ components:
         image_url:
           type: string
           format: uri
+        plan_days:
+          type: integer
+        plan_used_count:
+          type: integer
 
     PlanDetail:
       allOf:
