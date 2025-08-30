@@ -4,16 +4,6 @@
 
 ### 0. **ENUM Types** (Define first)
 ```sql
--- Buddhist tradition enum
-CREATE TYPE buddhist_tradition AS ENUM (
-    'theravada',
-    'mahayana', 
-    'vajrayana',
-    'zen',
-    'pure_land',
-    'nichiren',
-    'general'
-);
 
 -- Difficulty level enum
 CREATE TYPE difficulty_level AS ENUM (
@@ -56,8 +46,6 @@ CREATE TABLE plans (
     author_id BIGINT REFERENCES authors(id), -- Reference to authors table
     language VARCHAR(10) DEFAULT 'en',
     
-    -- Plan categorization (simplified)
-    tradition buddhist_tradition,
     difficulty_level difficulty_level,
     -- Flexible categorization
     tags JSONB, -- ['meditation', 'compassion', 'sutra_study', 'dealing_with_loss'] - covers category, practice_type, life_situation
@@ -65,16 +53,14 @@ CREATE TABLE plans (
     is_active BOOLEAN DEFAULT TRUE,
     
     -- Content metadata
-    estimated_daily_minutes INTEGER, -- Average time per day
     image_url VARCHAR(255),
-    preview_content TEXT, -- Sample content for discovery
     
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Indexes for plan discovery
-CREATE INDEX idx_plans_discovery ON plans(tradition, difficulty_level, is_active);
+CREATE INDEX idx_plans_discovery ON plans(tags, difficulty_level, is_active);
 CREATE INDEX idx_plans_featured ON plans(featured) WHERE featured = TRUE;
 CREATE INDEX idx_plans_search ON plans USING gin(to_tsvector('english', title || ' ' || description));
 CREATE INDEX idx_plans_tags ON plans USING gin(tags);
@@ -86,13 +72,6 @@ CREATE TABLE plan_items (
     id BIGSERIAL PRIMARY KEY,
     plan_id BIGINT REFERENCES plans(id) ON DELETE CASCADE,
     day_number INTEGER NOT NULL,
-    title VARCHAR(255),
-    description TEXT,
-
-    -- Scheduling and access
-    date DATE, -- Optional: for calendar-based plans
-    unlock_condition unlock_condition DEFAULT 'sequential',
-    estimated_duration INTEGER, -- minutes for this day
     
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
@@ -108,15 +87,13 @@ CREATE INDEX idx_plan_items_plan_day ON plan_items(plan_id, day_number);
 CREATE TABLE tasks (
     id BIGSERIAL PRIMARY KEY,
     plan_item_id BIGINT REFERENCES plan_items(id) ON DELETE CASCADE,
+    title TEXT,
     content_type content_type NOT NULL,
     content TEXT, -- Main content
     display_order INTEGER NOT NULL,
     estimated_time INTEGER, -- minutes
     is_required BOOLEAN DEFAULT TRUE,
     
-    -- Instructions and guidance
-    instruction TEXT, -- How to approach this task
-    reflection_prompt TEXT, -- Questions for contemplation
     
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -135,14 +112,10 @@ CREATE TABLE user_plan_progress (
     
     -- Progress tracking
     started_at TIMESTAMP NOT NULL,
-    completion_percentage DECIMAL(5,2) DEFAULT 0.00,
     
     -- Engagement metrics
     streak_count INTEGER DEFAULT 0,
     longest_streak INTEGER DEFAULT 0,
-    
-    -- User personalization
-    favorite BOOLEAN DEFAULT FALSE,
     
     -- Status
     status user_plan_status DEFAULT 'active',
@@ -209,6 +182,7 @@ CREATE INDEX idx_plan_reviews_rating ON plan_reviews(plan_id, rating);
 CREATE TABLE authors (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
+    bio TEXT
     image_url VARCHAR(255),
     -- Contact and social information
     email VARCHAR(255),
@@ -223,7 +197,21 @@ CREATE TABLE authors (
 
 CREATE INDEX idx_authors_verified ON authors(is_verified) WHERE is_verified = TRUE;
 ```
+### 8. Favorite
+```sql
+CREATE TABLE favorites (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    plan_id BIGINT REFERENCES plans(id) ON DELETE CASCADE,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
+CREATE INDEX idx_favorites_user_plan ON favorites(user_id, plan_id);
+```
+    
 
 ## **Schema Features Summary**
 
@@ -235,9 +223,9 @@ CREATE INDEX idx_authors_verified ON authors(is_verified) WHERE is_verified = TR
 - ✅ **user_task_completion** - Granular task completion tracking
 - ✅ **plan_reviews** - User ratings and feedback system
 - ✅ **authors** - Buddhist teachers and content creators
+- ✅ **favorites** - User's favorite plans
 
 ### **Simplified Categorization System:**
-- ✅ **tradition** enum for Buddhist schools (theravada, mahayana, vajrayana, etc.)
 - ✅ **difficulty_level** enum for user matching (beginner, intermediate, advanced)
 - ✅ **tags** JSONB field for flexible categorization (covers practice types, life situations, content types)
 - ✅ **featured** flag for admin-curated plan promotion
@@ -246,7 +234,6 @@ CREATE INDEX idx_authors_verified ON authors(is_verified) WHERE is_verified = TR
 - ✅ **estimated_daily_minutes** for time planning
 - ✅ **preview_content** for plan discovery
 - ✅ **streak_count** and **longest_streak** for engagement
-- ✅ **reflection_prompt** for contemplation guidance
 - ✅ **multiple content types** (text, audio, video, image, source_reference)
 
 ### **Performance & Search:**

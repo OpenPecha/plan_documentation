@@ -8,13 +8,14 @@
 ├─────────────────┤   1:N ├─────────────────────────────────────┤
 │ • id (PK)       │◄──────┤ • id (PK)                           │
 │ • name          │       │ • title                             │
-│ • image_url     │       │ • description                       │
-│ • email         │       │ • author_id (FK) ──────────────────►│
-│ • is_verified   │       │ • tradition (enum)                  │
-│ • is_active     │       │ • difficulty_level (enum)          │
-└─────────────────┘       │ • tags (JSONB)                     │
-                          │ • featured                          │
-                          │ • estimated_daily_minutes           │
+│ • bio           │       │ • description                       │
+│ • image_url     │       │ • author_id (FK) ──────────────────►│
+│ • email         │       │ • difficulty_level (enum)           │
+│ • is_verified   │       │ • tags (JSONB)                      │
+│ • is_active     │       │ • featured                          │
+└─────────────────┘       │ • is_active                         │
+                          │ • language                          │
+                          │ • image_url                         │
                           └─────────────────────────────────────┘
                                               │
                                               │ 1:N
@@ -25,46 +26,37 @@
                           │ • id (PK)                           │
                           │ • plan_id (FK) ─────────────────────┤
                           │ • day_number                        │
-                          │ • title                             │
-                          │ • description                       │
-                          │ • estimated_duration                │
                           └─────────────────────────────────────┘
                                               │
                                               │ 1:N
                                               ▼
 ┌─────────────────────────────────────┐   ┌─────────────────────────────────────┐
-│              TASKS                  │   │        USER_TASK_COMPLETION         │
+│              TASKS                  │   │         USER_PLAN_PROGRESS          │
 ├─────────────────────────────────────┤   ├─────────────────────────────────────┤
 │ • id (PK)                           │   │ • id (PK)                           │
 │ • plan_item_id (FK) ────────────────┤   │ • user_id                           │
-│ • content_type (enum)               │   │ • task_id (FK) ─────────────────────┤
-│ • content                           │   │ • completed_at                      │
-│ • display_order                     │   └─────────────────────────────────────┘
-│ • estimated_time                    │                     ▲
-│ • is_required                       │                     │ N:1
-│ • instruction                       │                     │
-│ • reflection_prompt                 │◄────────────────────┘
-└─────────────────────────────────────┘
+│ • title                             │   │ • plan_id (FK) ─────────────────────┤
+│ • content_type (enum)               │   │ • started_at                        │
+│ • content                           │   │ • streak_count                      │
+│ • display_order                     │   │ • longest_streak                    │
+│ • estimated_time                    │   │ • status (enum)                     │
+│ • is_required                       │   │ • is_completed                      │
+└─────────────────────────────────────┘   │ • completed_at                      │
+                                          └─────────────────────────────────────┘
 
 ┌─────────────────────────────────────┐   ┌─────────────────────────────────────┐
-│         USER_PLAN_PROGRESS          │   │           PLAN_REVIEWS              │
+│             FAVORITES               │   │           PLAN_REVIEWS              │
 ├─────────────────────────────────────┤   ├─────────────────────────────────────┤
 │ • id (PK)                           │   │ • id (PK)                           │
 │ • user_id                           │   │ • plan_id (FK) ─────────────────────┤
-│ • plan_id (FK) ─────────────────────┤   │ • user_id                           │
-│ • started_at                        │   │ • rating (1-5)                      │
-│ • completion_percentage             │   │ • review_text                       │
-│ • streak_count                      │   │ • is_approved                       │
-│ • longest_streak                    │   └─────────────────────────────────────┘
-│ • favorite                          │                     ▲
-│ • status (enum)                     │                     │ N:1
-│ • is_completed                      │                     │
-└─────────────────────────────────────┘                     │
-                    ▲                                       │
-                    │ N:1                                   │
-                    │                                       │
-                    └───────────────────────────────────────┘
-                              PLANS
+│ • plan_id (FK)                      │   │ • user_id                           │
+│ • created_at                        │   │ • rating (1-5)                      │
+└─────────────────────────────────────┘   │ • review_text                       │
+                          ▲               │ • is_approved                       │
+                          │ N:1           └─────────────────────────────────────┘
+                          │                                  ▲
+                          └──────────────────────────────────┘
+                                     PLANS
 ```
 
 ## Relationship Summary
@@ -76,9 +68,10 @@ AUTHORS (1) ──► PLANS (N) ──► PLAN_ITEMS (N) ──► TASKS (N)
 
 **User Interactions:**
 ```
-USERS ──► USER_PLAN_PROGRESS (tracks plan enrollment & progress)
+USERS ──► USER_PLAN_PROGRESS (tracks plan enrollment & streaks)
 USERS ──► USER_TASK_COMPLETION (tracks individual task completion)
 USERS ──► PLAN_REVIEWS (ratings & feedback)
+USERS ──► FAVORITES (bookmarked plans)
 ```
 
 ## Creating Professional Visual Diagrams
@@ -95,6 +88,7 @@ erDiagram
     authors {
         bigint id PK
         varchar name
+        text bio
         varchar image_url
         varchar email
         boolean is_verified
@@ -106,19 +100,18 @@ erDiagram
         varchar title
         text description
         bigint author_id FK
-        buddhist_tradition tradition
         difficulty_level difficulty_level
         jsonb tags
         boolean featured
-        integer number_of_days
+        boolean is_active
+        varchar language
+        varchar image_url
     }
 
     plan_items {
         bigint id PK
         bigint plan_id FK
         integer day_number
-        varchar title
-        text description
     }
 
     tasks {
@@ -128,7 +121,8 @@ erDiagram
         content_type content_type
         text content
         integer display_order
-        integer estimated_duration
+        integer estimated_time
+        boolean is_required
     }
 
     user_plan_progress {
@@ -136,17 +130,18 @@ erDiagram
         bigint user_id
         bigint plan_id FK
         timestamp started_at
-        decimal completion_percentage
         integer streak_count
+        integer longest_streak
         user_plan_status status
         boolean is_completed
+        timestamp completed_at
     }
 
-    user_task_completion {
+    favorites {
         bigint id PK
         bigint user_id
-        bigint task_id FK
-        timestamp completed_at
+        bigint plan_id FK
+        timestamp created_at
     }
 
     plan_reviews {
@@ -163,6 +158,7 @@ erDiagram
     plan_items ||--o{ tasks : includes
     plans ||--o{ user_plan_progress : tracks
     plans ||--o{ plan_reviews : receives
+    plans ||--o{ favorites : bookmarked_in
     tasks ||--o{ user_task_completion : completed_by
 ```
 
@@ -174,7 +170,7 @@ flowchart TD
     B --> C[Each Day Has Multiple Tasks]
     C --> D[User Enrolls in Plan]
     D --> E[User Completes Tasks Daily]
-    E --> F[Progress Tracked & Streaks Calculated]
+    E --> F[Streaks Calculated]
     F --> G[User Can Review Plan]
     
     style A fill:#e1f5fe
@@ -195,9 +191,10 @@ flowchart TD
 - **Users** enroll in **Plans** (tracked in `user_plan_progress`)
 - **Users** complete individual **Tasks** (tracked in `user_task_completion`)
 - **Users** can review **Plans** (stored in `plan_reviews`)
+- **Users** can favorite **Plans** (stored in `favorites`)
 
 ### **Progress Tracking**
-- Plan-level progress: completion percentage, streaks, status
+- Plan-level engagement: streaks, status, completion flag and timestamp
 - Task-level completion: individual task completion timestamps
 - Review system: ratings and feedback for plans
 
@@ -205,17 +202,6 @@ flowchart TD
 
 ```mermaid
 classDiagram
-    class buddhist_tradition {
-        <<enumeration>>
-        theravada
-        mahayana
-        vajrayana
-        zen
-        pure_land
-        nichiren
-        general
-    }
-    
     class difficulty_level {
         <<enumeration>>
         beginner
@@ -251,25 +237,26 @@ classDiagram
 ## Business Rules Summary
 
 ### **Plan Organization**
-- **Simplified Categorization**: Only `tradition`, `difficulty_level`, and flexible `tags`
+- **Simplified Categorization**: `difficulty_level` and flexible `tags`
 - **Featured Plans**: Admin-curated plans for homepage promotion
 - **Multi-language**: Plans can be created in different languages
 
 ### **User Experience**
 - **Flexible Enrollment**: Users can have multiple active plans
-- **Progress Tracking**: Plan-specific streaks and completion percentages
+- **Progress Tracking**: Plan-specific streaks
 - **Task Flexibility**: Tasks can be required or optional
 - **Review System**: Users can rate and review completed plans
+- **Favorites**: Users can bookmark plans
 
 ### **Content Management**
 - **Author Verification**: Authors can be verified by admins
 - **Content Types**: Support for text, audio, video, images, and references
 - **Scheduling**: Plans can be sequential or date-based
-- **Time Estimation**: Both daily and task-level time estimates
+- **Time Estimation**: Task-level time estimates
 
 ## Key Indexes for Performance
 
-- **Plan Discovery**: `(tradition, difficulty_level, is_active)`
+- **Plan Discovery**: `(tags, difficulty_level, is_active)`
 - **Featured Plans**: `(featured)` where featured = TRUE
 - **Full-text Search**: GIN index on plan titles and descriptions
 - **Tags Search**: GIN index on JSONB tags field

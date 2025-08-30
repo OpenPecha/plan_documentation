@@ -49,26 +49,19 @@ A simple Content Management System for **internal employees only** to create and
 ```
 Plan Title: ________________
 Description: _______________
-Duration: [14] days
 Difficulty: [Beginner ▼]
-Tradition: [Theravada ▼]
-Practice Type: [Meditation ▼]
 Tags: meditation, mindfulness
-Estimated Duration: [30] minutes/day
+Language: [en ▼]
 ```
 
 **Step 2: Daily Content** (creates `plan_items` and `tasks`)
 ```
-Day 1: Introduction to Mindfulness
+Day 1
 ┌─────────────────────────────────────┐
-│ Day Title: ______________________   │
-│ Description: ___________________    │
-│ Unlock Condition: [Sequential ▼]   │
-├─────────────────────────────────────┤
 │ Tasks:                              │
 │ 1. [Text] Reading Assignment        │
 │ 2. [Audio] Guided Meditation       │
-│ 3. [Reflection] Journal Questions   │
+│ 3. [Text] Reflection Questions      │
 │                                     │
 │ [+ Add Task] [Upload Media]         │
 └─────────────────────────────────────┘
@@ -128,7 +121,7 @@ Day 1: Introduction to Mindfulness
 │ • Created by Sarah (Jan 15)         │
 │ • Assigned to John (Jan 20)         │
 │ • Assigned to Lisa (Jan 25)         │
-│ • Current: Lisa                     │
+│ • Current: Lisa                      │
 └─────────────────────────────────────┘
 ```
 
@@ -180,15 +173,13 @@ CREATE TABLE cms_plan_metadata (
 ### **Existing Tables Used by CMS**
 
 The CMS directly uses these existing tables:
-- **`plans`** - Main plan data (title, description, duration, etc.) - **UNCHANGED**
+- **`plans`** - Main plan data (title, description, difficulty_level, tags, featured, is_active, language, image_url) - **UNCHANGED**
 - **`plan_items`** - Daily content items within plans - **UNCHANGED**
 - **`tasks`** - Individual tasks within each day - **UNCHANGED**
 - **`authors`** - Author information (linked to employees)
 - **`media_library`** - File storage and management
 - **`user_plan_progress`** - For analytics
 - **`plan_reviews`** - For feedback and ratings
-
-**Key Design Principle**: The main `plans` table remains clean and user-focused. All CMS-specific data (assignments, status, workflow) is stored in separate `cms_plan_metadata` table, keeping the core schema uncluttered.
 
 ### **CMS Indexes for Performance**
 

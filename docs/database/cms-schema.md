@@ -68,7 +68,7 @@ CREATE INDEX idx_plan_assignments_from_employee ON plan_assignments(from_employe
 
 The CMS uses these existing tables from the main Buddhist Reading Plans schema **without any modifications**:
 
-- **`plans`** - Main plan data (title, description, duration, tradition, etc.)
+- **`plans`** - Main plan data (title, description, difficulty_level, tags, featured, is_active, language, image_url)
 - **`plan_items`** - Daily content items within plans
 - **`tasks`** - Individual tasks within each day
 - **`authors`** - Author information (can be linked to employees)
