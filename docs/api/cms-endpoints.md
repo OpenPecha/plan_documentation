@@ -4,110 +4,135 @@
 
 This document defines the API endpoints specifically designed for the Content Management System (CMS) used by Authors and Admins to create and manage Buddhist reading plans.
 
+## Base URL
+
+- **Production**: `https://api.webuddhist.com/v1`
+- **Staging**: `https://staging-api.webuddhist.com/v1`
+- **Development**: `http://localhost:8000/v1`
+
 ## Authentication & Authorization
 
-All CMS endpoints require authentication and appropriate role-based permissions:
+Most CMS endpoints require JWT authentication. Include the token in the Authorization header:
+
+```http
+Authorization: Bearer <your-jwt-token>
+```
+
+**User Roles:**
 - **Author**: Can manage their own content
 - **Admin**: Can manage all content and system settings
 
-```http
-Authorization: Bearer <jwt-token>
-```
+## Rate Limiting
 
-## 1. Dashboard Endpoints
+- **Authenticated users**: 1000 requests per hour
+- **Unauthenticated users**: 100 requests per hour
 
-### **GET /cms/dashboard**
-Get dashboard data based on user role.
+## 1. Authentication Endpoints
 
-**Author Response:**
+### **POST /cms/auth/login**
+Author login to the CMS system.
+
+**Request Body:**
 ```json
 {
-  "my_plans": {
-    "total": 5,
-    "published": 3,
-    "draft": 2,
-    "total_enrollments": 1250,
-    "average_rating": 4.6
+  "email": "author@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "first_name": "John",
+    "last_name": "Doe",
+    "name": "John Doe",
+    "email": "author@example.com",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "is_active": true
   },
-  "recent_activity": [
-    {
-      "type": "new_enrollment",
-      "plan_id": "123",
-      "plan_title": "Mindfulness for Beginners",
-      "count": 15,
-      "timestamp": "2024-01-15T10:30:00Z"
-    }
-  ],
-  "performance_metrics": {
-    "this_month_enrollments": 89,
-    "completion_rate": 0.78,
-    "recent_reviews": 12
+  "auth": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "bearer"
   }
 }
 ```
 
-**Admin Response:**
+### **POST /cms/auth/register**
+Author registration (requires email verification and admin activation).
+
+**Request Body:**
 ```json
 {
-  "platform_overview": {
-    "total_plans": 156,
-    "total_authors": 23,
-    "total_users": 5420,
-    "active_plans": 134
-  },
-  "moderation_queue": {
-    "pending_plans": 7,
-    "reported_content": 2
-  },
-  "system_health": {
-    "api_response_time": "120ms",
-    "error_rate": 0.02,
-    "uptime": 99.9
-  }
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane@example.com",
+  "password": "securepassword"
+}
+```
+
+**Response (201):**
+```json
+{
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane@example.com",
+  "status": "pending_verification",
+  "message": "Registration successful. Please check your email to verify your account."
+}
+```
+
+### **POST /cms/auth/verify-email**
+Verify email address with token.
+
+**Request Body:**
+```json
+{
+  "token": "verification-token-here"
+}
+```
+
+### **POST /cms/auth/refresh-token**
+Refresh access token.
+
+**Request Body:**
+```json
+{
+  "token": "refresh-token-here"
 }
 ```
 
 ## 2. Plan Management Endpoints
 
 ### **GET /cms/plans**
-Get plans for the authenticated user (Author) or all plans (Admin).
+Get all plans with filtering and pagination.
 
 **Query Parameters:**
-- `status`: draft, published, archived
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 20)
-- `search`: Search in title/description
-- `tradition`: Filter by Buddhist tradition
-- `author_id`: Filter by author (Admin only)
+- `search`: Search by plan title
+- `sort_by`: Sort plans by field (title, total_days, status) - default: title
+- `sort_order`: Sort order (asc, desc) - default: asc
+- `skip`: Number of items to skip (default: 0)
+- `limit`: Maximum items to return (default: 20, max: 50)
 
-**Response:**
+**Response (200):**
 ```json
 {
   "plans": [
     {
-      "id": "plan_123",
+      "id": "550e8400-e29b-41d4-a716-446655440000",
       "title": "Introduction to Meditation",
-      "status": "published",
-      "duration_days": 21,
-      "tradition": "general",
-      "difficulty_level": "beginner",
-      "enrollments": 342,
-      "average_rating": 4.5,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-15T10:30:00Z",
-      "author": {
-        "id": "author_456",
-        "name": "Lama Tenzin",
-        "is_verified": true
-      }
+      "description": "A comprehensive guide to meditation practices",
+      "image_url": "https://example.com/plan-image.jpg",
+      "total_days": 21,
+      "status": "PUBLISHED",
+      "subscription_count": 342
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 5,
-    "total_pages": 1
-  }
+  "skip": 0,
+  "limit": 20,
+  "total": 5
 }
 ```
 
@@ -118,359 +143,401 @@ Create a new plan.
 ```json
 {
   "title": "Mindfulness in Daily Life",
-  "description": "A 14-day journey into integrating mindfulness...",
-  "duration_days": 14,
-  "tradition": "general",
+  "description": "A 14-day journey into integrating mindfulness practices",
   "difficulty_level": "beginner",
-  "practice_type": "meditation",
-  "tags": ["mindfulness", "daily_practice", "beginner"],
-  "unlock_condition": "sequential",
-  "is_featured": false,
-  "visibility": "public"
+  "total_days": 14,
+  "image_url": "https://example.com/plan-image.jpg",
+  "tags": ["mindfulness", "daily_practice", "beginner"]
 }
 ```
 
-**Response:**
+**Response (201):**
 ```json
 {
-  "id": "plan_789",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "title": "Mindfulness in Daily Life",
-  "status": "draft",
-  "created_at": "2024-01-20T15:00:00Z",
-  "author_id": "author_456"
+  "description": "A 14-day journey into integrating mindfulness practices",
+  "image_url": "https://example.com/plan-image.jpg",
+  "total_days": 14,
+  "status": "DRAFT",
+  "subscription_count": 0
 }
 ```
 
 ### **GET /cms/plans/{plan_id}**
-Get detailed plan information for editing.
+Get plan details with days listing.
 
-**Response:**
+**Response (200):**
 ```json
 {
-  "id": "plan_123",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "title": "Introduction to Meditation",
-  "description": "A comprehensive guide...",
-  "status": "published",
-  "duration_days": 21,
-  "tradition": "general",
-  "difficulty_level": "beginner",
-  "practice_type": "meditation",
-  "tags": ["meditation", "beginner"],
-  "unlock_condition": "sequential",
-  "is_featured": false,
-  "visibility": "public",
-  "plan_items": [
+  "description": "A comprehensive guide to meditation practices",
+  "days": [
     {
-      "id": "item_001",
+      "id": "550e8400-e29b-41d4-a716-446655440001",
       "day_number": 1,
-      "title": "What is Meditation?",
-      "description": "Introduction to meditation concepts",
-      "unlock_condition": "sequential",
+      "title": "Day 1: What is Meditation?",
       "tasks": [
         {
-          "id": "task_001",
-          "type": "text",
+          "id": "550e8400-e29b-41d4-a716-446655440002",
           "title": "Read: Basics of Meditation",
-          "content": {
-            "text": "Meditation is the practice of...",
-            "estimated_duration": 10
-          },
-          "order": 1
+          "description": "Introduction to meditation concepts",
+          "content_type": "text",
+          "content": "Meditation is the practice of...",
+          "estimated_time": 10
         }
       ]
     }
-  ],
-  "analytics": {
-    "enrollments": 342,
-    "completions": 267,
-    "average_rating": 4.5,
-    "completion_rate": 0.78
-  }
+  ]
 }
 ```
 
 ### **PUT /cms/plans/{plan_id}**
-Update plan metadata.
+Update plan (Admin/Author only).
+
+**Request Body:**
+```json
+{
+  "title": "Updated Plan Title",
+  "description": "Updated description",
+  "difficulty_level": "intermediate",
+  "total_days": 30,
+  "image_url": "https://example.com/new-image.jpg",
+  "tags": ["updated", "meditation"]
+}
+```
 
 ### **DELETE /cms/plans/{plan_id}**
-Delete a plan (Admin only, or Author if no enrollments).
+Delete plan (Admin only).
 
-### **POST /cms/plans/{plan_id}/publish**
-Publish a draft plan.
+**Response (204):** No content
 
-### **POST /cms/plans/{plan_id}/unpublish**
-Unpublish a plan (move to draft).
-
-## 3. Plan Content Management
-
-### **POST /cms/plans/{plan_id}/items**
-Add a new daily item to a plan.
+### **PATCH /cms/plans/{plan_id}/status**
+Update plan status.
 
 **Request Body:**
 ```json
 {
-  "day_number": 5,
-  "title": "Loving-Kindness Meditation",
-  "description": "Practice sending love and compassion",
-  "unlock_condition": "sequential",
-  "tasks": [
-    {
-      "type": "audio",
-      "title": "Guided Loving-Kindness Meditation",
-      "content": {
-        "audio_url": "https://cdn.example.com/audio/loving-kindness.mp3",
-        "duration": 1200,
-        "transcript": "Begin by finding a comfortable position..."
-      },
-      "order": 1
-    },
-    {
-      "type": "reflection",
-      "title": "Reflection Questions",
-      "content": {
-        "questions": [
-          "How did you feel during the meditation?",
-          "What challenges did you encounter?"
-        ]
-      },
-      "order": 2
-    }
-  ]
+  "status": "PUBLISHED"
 }
 ```
 
-### **PUT /cms/plans/{plan_id}/items/{item_id}**
-Update a plan item.
-
-### **DELETE /cms/plans/{plan_id}/items/{item_id}**
-Delete a plan item.
-
-### **POST /cms/plans/{plan_id}/items/{item_id}/tasks**
-Add a task to a plan item.
-
-### **PUT /cms/plans/{plan_id}/items/{item_id}/tasks/{task_id}**
-Update a task.
-
-### **DELETE /cms/plans/{plan_id}/items/{item_id}/tasks/{task_id}**
-Delete a task.
-
-## 4. Media Management
-
-### **GET /cms/media**
-Get media library for the authenticated user.
-
-**Query Parameters:**
-- `type`: audio, video, image, document
-- `folder`: Folder path
-- `search`: Search in filename/tags
-- `page`, `limit`: Pagination
-
-**Response:**
+**Response (200):**
 ```json
 {
-  "media": [
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Introduction to Meditation",
+  "description": "A comprehensive guide",
+  "status": "PUBLISHED",
+  "total_days": 21,
+  "subscription_count": 342
+}
+```
+
+## 3. Day Management Endpoints
+
+### **POST /cms/plans/{plan_id}/days**
+Add a new day to a plan (auto-generates day_number and title).
+
+**Request Body:**
+```json
+{
+  "title": "Loving-Kindness Practice"
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440003",
+  "day_number": 5,
+  "title": "Day 5: Loving-Kindness Practice",
+  "tasks": []
+}
+```
+
+### **PATCH /cms/plans/{plan_id}/days**
+Reorder days within a plan.
+
+**Request Body:**
+```json
+{
+  "days": [
     {
-      "id": "media_123",
-      "filename": "meditation-bell.mp3",
-      "type": "audio",
-      "size": 2048576,
-      "duration": 300,
-      "url": "https://cdn.example.com/audio/meditation-bell.mp3",
-      "folder": "/my-plans/mindfulness-basics/audio",
-      "tags": ["bell", "meditation", "timer"],
-      "uploaded_at": "2024-01-15T10:00:00Z",
-      "usage_count": 5
+      "day_id": "550e8400-e29b-41d4-a716-446655440003",
+      "day_number": 1
+    },
+    {
+      "day_id": "550e8400-e29b-41d4-a716-446655440004",
+      "day_number": 2
     }
-  ],
-  "folders": [
-    "/my-plans/mindfulness-basics",
-    "/shared-resources/meditation-guides"
   ]
 }
 ```
+
+### **DELETE /cms/plans/{plan_id}/days/{day_id}**
+Delete a day and all its tasks.
+
+**Response (204):** No content
+
+## 4. Task Management Endpoints
+
+### **POST /cms/plans/{plan_id}/days/{day_id}/tasks**
+Add a task to a specific day.
+
+**Request Body:**
+```json
+{
+  "title": "Guided Loving-Kindness Meditation",
+  "description": "Practice sending love and compassion",
+  "content_type": "audio",
+  "content": "https://cdn.example.com/audio/loving-kindness.mp3",
+  "estimated_time": 20
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440005",
+  "title": "Guided Loving-Kindness Meditation",
+  "description": "Practice sending love and compassion",
+  "content_type": "audio",
+  "content": "https://cdn.example.com/audio/loving-kindness.mp3",
+  "estimated_time": 20
+}
+```
+
+### **PUT /cms/plans/{plan_id}/days/{day_id}/tasks/{task_id}**
+Update a specific task.
+
+**Request Body:**
+```json
+{
+  "title": "Updated Task Title",
+  "description": "Updated description",
+  "content_type": "text",
+  "content": "Updated content",
+  "estimated_time": 15
+}
+```
+
+### **DELETE /cms/plans/{plan_id}/days/{day_id}/tasks/{task_id}**
+Delete a specific task.
+
+**Response (204):** No content
+
+### **PATCH /cms/plans/{plan_id}/tasks/{task_id}**
+Move a task to a different day.
+
+**Request Body:**
+```json
+{
+  "day_id": "550e8400-e29b-41d4-a716-446655440006"
+}
+```
+
+## 5. Media Upload Endpoints
 
 ### **POST /cms/media/upload**
-Upload media files.
+Upload image for plans or tasks.
 
 **Request:** Multipart form data
-- `file`: The media file
-- `folder`: Target folder (optional)
-- `tags`: Comma-separated tags (optional)
-- `description`: File description (optional)
+- `file`: Image file (JPEG, PNG, WebP)
+- `path`: Storage path for the uploaded file (e.g., "plans/images/")
 
-**Response:**
+**Response (201):**
 ```json
 {
-  "id": "media_456",
-  "filename": "guided-meditation.mp3",
-  "url": "https://cdn.example.com/audio/guided-meditation.mp3",
-  "type": "audio",
-  "size": 15728640,
-  "duration": 1800
+  "id": "550e8400-e29b-41d4-a716-446655440007",
+  "url": "https://cdn.example.com/plans/images/meditation-image.jpg",
+  "filename": "meditation-image.jpg",
+  "size": 2048576,
+  "mime_type": "image/jpeg",
+  "path": "plans/images/",
+  "uploaded_at": "2024-01-20T15:00:00Z",
+  "uploaded_by": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-### **PUT /cms/media/{media_id}**
-Update media metadata (tags, description, folder).
+## 6. Reviews Endpoints
 
-### **DELETE /cms/media/{media_id}**
-Delete media file.
+### **GET /cms/plans/{plan_id}/reviews**
+Get plan reviews.
 
-### **POST /cms/media/folders**
-Create a new folder.
+**Query Parameters:**
+- `skip`: Number of items to skip (default: 0)
+- `limit`: Maximum items to return (default: 10, max: 50)
 
-### **GET /cms/media/{media_id}/usage**
-Get usage information for a media file.
-
-## 5. Analytics Endpoints
-
-### **GET /cms/analytics/plans/{plan_id}**
-Get detailed analytics for a specific plan.
-
-**Response:**
+**Response (200):**
 ```json
 {
-  "plan_id": "plan_123",
-  "overview": {
-    "total_enrollments": 342,
-    "total_completions": 267,
-    "completion_rate": 0.78,
-    "average_rating": 4.5,
-    "total_reviews": 89
-  },
-  "engagement": {
-    "daily_completion_rates": [
-      {"day": 1, "completion_rate": 0.95},
-      {"day": 2, "completion_rate": 0.89},
-      {"day": 3, "completion_rate": 0.84}
-    ],
-    "drop_off_points": [
-      {"day": 7, "drop_off_rate": 0.15},
-      {"day": 14, "drop_off_rate": 0.08}
-    ]
-  },
-  "content_performance": {
-    "most_engaging_tasks": [
-      {
-        "task_id": "task_005",
-        "title": "Guided Meditation",
-        "engagement_score": 0.92
-      }
-    ],
-    "least_engaging_tasks": [
-      {
-        "task_id": "task_012",
-        "title": "Reading Assignment",
-        "engagement_score": 0.67
-      }
-    ]
-  },
-  "user_feedback": {
-    "rating_distribution": {
-      "5": 45,
-      "4": 32,
-      "3": 8,
-      "2": 3,
-      "1": 1
-    },
-    "common_themes": [
-      {"theme": "helpful_guidance", "count": 23},
-      {"theme": "too_fast_paced", "count": 8}
-    ]
-  }
-}
-```
-
-### **GET /cms/analytics/author/{author_id}**
-Get analytics for an author's content (Admin only, or own data for Authors).
-
-## 6. Content Moderation (Admin Only)
-
-### **GET /cms/moderation/queue**
-Get content awaiting moderation.
-
-**Response:**
-```json
-{
-  "pending_plans": [
+  "reviews": [
     {
-      "id": "plan_789",
-      "title": "Advanced Zen Practice",
-      "author": {
-        "id": "author_123",
-        "name": "Teacher Sarah"
-      },
-      "submitted_at": "2024-01-20T10:00:00Z",
-      "priority": "normal"
+      "id": "550e8400-e29b-41d4-a716-446655440008",
+      "plan_id": "550e8400-e29b-41d4-a716-446655440000",
+      "author_id": "550e8400-e29b-41d4-a716-446655440009",
+      "author_name": "John Practitioner",
+      "rating": 5,
+      "review_text": "Excellent meditation plan! Very helpful for beginners.",
+      "is_approved": true,
+      "created_at": "2024-01-15T10:30:00Z"
     }
   ],
-  "reported_content": [
-    {
-      "id": "report_001",
-      "content_type": "plan",
-      "content_id": "plan_456",
-      "reason": "inappropriate_content",
-      "reporter_id": "user_789",
-      "reported_at": "2024-01-19T15:30:00Z"
-    }
-  ]
+  "skip": 0,
+  "limit": 10,
+  "total": 25
 }
 ```
 
-### **POST /cms/moderation/plans/{plan_id}/approve**
-Approve a plan for publication.
+## 7. Admin Author Management Endpoints
 
-### **POST /cms/moderation/plans/{plan_id}/reject**
-Reject a plan with feedback.
+### **GET /cms/admin/pending-authors**
+Get authors pending activation (Admin only).
+
+**Query Parameters:**
+- `skip`: Number of items to skip (default: 0)
+- `limit`: Maximum items to return (default: 20, max: 50)
+
+**Response (200):**
+```json
+{
+  "authors": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "jane@example.com",
+      "name": "Jane Smith",
+      "is_active": false,
+      "is_email_verified": true,
+      "created_at": "2024-01-20T10:00:00Z",
+      "activated_at": null
+    }
+  ],
+  "skip": 0,
+  "limit": 20,
+  "total": 5
+}
+```
+
+### **PATCH /cms/admin/authors/{author_id}/activate**
+Activate author account (Admin only).
+
+**Response (200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440010",
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane@example.com",
+  "name": "Jane Smith",
+  "is_active": true,
+  "is_email_verified": true,
+  "created_at": "2024-01-20T10:00:00Z",
+  "activated_at": "2024-01-21T09:00:00Z"
+}
+```
+
+### **PATCH /cms/admin/authors/{author_id}/deactivate**
+Deactivate author account (Admin only).
+
+## 8. Author Management Endpoints
+
+### **GET /cms/authors**
+Get all authors (Admin only).
+
+**Query Parameters:**
+- `verified_only`: Filter to verified authors only (default: false)
+
+**Response (200):**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane@example.com",
+    "name": "Jane Smith",
+    "image_url": "https://example.com/avatar.jpg",
+    "is_active": true,
+    "is_email_verified": true,
+    "created_at": "2024-01-20T10:00:00Z",
+    "activated_at": "2024-01-21T09:00:00Z"
+  }
+]
+```
+
+### **GET /cms/authors/me**
+Get current author's details.
+
+**Response (200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440010",
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "email": "jane@example.com",
+  "name": "Jane Smith",
+  "image_url": "https://example.com/avatar.jpg",
+  "is_active": true,
+  "is_email_verified": true,
+  "created_at": "2024-01-20T10:00:00Z",
+  "plan_count": 5,
+  "average_rating": 4.6,
+  "bio": "Experienced meditation teacher with 10 years of practice."
+}
+```
+
+### **PUT /cms/authors/me**
+Update current author's details.
 
 **Request Body:**
 ```json
 {
-  "reason": "Content needs improvement",
-  "feedback": "Please add more detailed instructions for the meditation practices.",
-  "suggestions": [
-    "Add audio guidance for day 3",
-    "Clarify the breathing technique description"
-  ]
+  "name": "Jane Smith-Doe",
+  "image_url": "https://example.com/new-avatar.jpg",
+  "bio": "Updated bio with more experience details."
 }
 ```
 
-### **POST /cms/moderation/plans/{plan_id}/feature**
-Feature a plan on the homepage.
+### **GET /cms/authors/{author_id}**
+Get author details (Admin only).
 
-### **DELETE /cms/moderation/plans/{plan_id}/feature**
-Remove plan from featured content.
+### **PATCH /cms/authors/{author_id}**
+Enable/disable author (Admin only).
 
-## 7. Author Management (Admin Only)
+**Request Body:**
+```json
+{
+  "is_active": false
+}
+```
 
-### **GET /cms/authors**
-Get all authors with management information.
+### **DELETE /cms/authors/{author_id}**
+Delete author (Admin only).
 
-### **POST /cms/authors**
-Create a new author account.
+**Response (204):** No content
 
-### **PUT /cms/authors/{author_id}**
-Update author information.
+### **GET /cms/authors/{author_id}/plans**
+Get plans by author (Admin only).
 
-### **POST /cms/authors/{author_id}/verify**
-Verify an author (add verification badge).
-
-### **DELETE /cms/authors/{author_id}/verify**
-Remove author verification.
-
-### **POST /cms/authors/{author_id}/suspend**
-Suspend an author account.
-
-## 8. Bulk Operations
-
-### **POST /cms/bulk/plans/export**
-Export multiple plans to JSON format.
-
-### **POST /cms/bulk/plans/import**
-Import plans from JSON format.
-
-### **POST /cms/bulk/media/organize**
-Bulk organize media files into folders.
+**Response (200):**
+```json
+{
+  "plans": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Introduction to Meditation",
+      "description": "A comprehensive guide",
+      "total_days": 21,
+      "status": "PUBLISHED",
+      "subscription_count": 342
+    }
+  ]
+}
+```
 
 ## Error Responses
 
@@ -478,28 +545,61 @@ All endpoints follow consistent error response format:
 
 ```json
 {
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Plan title is required",
-    "details": {
-      "field": "title",
-      "constraint": "required"
-    }
-  }
+  "error": "validation_failed",
+  "message": "Request validation failed"
 }
 ```
 
-## Rate Limiting
+**Common HTTP Status Codes:**
+- `200`: Success
+- `201`: Created
+- `204`: No Content
+- `400`: Bad Request
+- `401`: Unauthorized
+- `403`: Forbidden
+- `404`: Not Found
+- `409`: Conflict
+- `413`: File Too Large
 
-CMS endpoints have higher rate limits for authenticated users:
-- **Authors**: 1000 requests per hour
-- **Admins**: 2000 requests per hour
-- **File uploads**: 100 uploads per hour per user
+## Pagination Format
 
-## Webhooks
+All paginated endpoints use consistent pagination:
 
-CMS supports webhooks for real-time updates:
-- `plan.published`: When a plan is published
-- `plan.featured`: When a plan is featured/unfeatured
-- `moderation.required`: When content needs moderation
-- `analytics.milestone`: When plans reach enrollment milestones
+**Query Parameters:**
+- `skip`: Number of items to skip (default: 0)
+- `limit`: Maximum items to return
+
+**Response Format:**
+```json
+{
+  "[resource_name]": [...],
+  "skip": 0,
+  "limit": 20,
+  "total": 100
+}
+```
+
+## Content Types
+
+Supported content types for tasks:
+- `text`: Text-based content
+- `audio`: Audio files and URLs
+- `video`: Video files and URLs
+- `image`: Image files and URLs
+- `source_reference`: References to Buddhist texts
+
+## Difficulty Levels
+
+- `beginner`: For new practitioners
+- `intermediate`: For those with some experience
+- `advanced`: For experienced practitioners
+
+## Buddhist Traditions
+
+- `theravada`: Theravada Buddhism
+- `mahayana`: Mahayana Buddhism
+- `vajrayana`: Vajrayana Buddhism
+- `zen`: Zen Buddhism
+- `pure_land`: Pure Land Buddhism
+- `nichiren`: Nichiren Buddhism
+- `general`: General Buddhist teachings
