@@ -46,11 +46,7 @@ Author login to the CMS system.
   "user": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "first_name": "John",
-    "last_name": "Doe",
-    "name": "John Doe",
-    "email": "author@example.com",
-    "avatar_url": "https://example.com/avatar.jpg",
-    "is_active": true
+    "last_name": "Doe"
   },
   "auth": {
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -79,7 +75,7 @@ Author registration (requires email verification and admin activation).
   "first_name": "Jane",
   "last_name": "Smith",
   "email": "jane@example.com",
-  "status": "pending_verification",
+  "status": "PENDING_VERIFICATION",
   "message": "Registration successful. Please check your email to verify your account."
 }
 ```
@@ -144,7 +140,7 @@ Create a new plan.
 {
   "title": "Mindfulness in Daily Life",
   "description": "A 14-day journey into integrating mindfulness practices",
-  "difficulty_level": "beginner",
+  "difficulty_level": "BEGINNER",
   "total_days": 14,
   "image_url": "https://example.com/plan-image.jpg",
   "tags": ["mindfulness", "daily_practice", "beginner"]
@@ -183,7 +179,7 @@ Get plan details with days listing.
           "id": "550e8400-e29b-41d4-a716-446655440002",
           "title": "Read: Basics of Meditation",
           "description": "Introduction to meditation concepts",
-          "content_type": "text",
+          "content_type": "TEXT",
           "content": "Meditation is the practice of...",
           "estimated_time": 10
         }
@@ -201,7 +197,7 @@ Update plan (Admin/Author only).
 {
   "title": "Updated Plan Title",
   "description": "Updated description",
-  "difficulty_level": "intermediate",
+  "difficulty_level": "INTERMEDIATE",
   "total_days": 30,
   "image_url": "https://example.com/new-image.jpg",
   "tags": ["updated", "meditation"]
@@ -291,7 +287,7 @@ Add a task to a specific day.
 {
   "title": "Guided Loving-Kindness Meditation",
   "description": "Practice sending love and compassion",
-  "content_type": "audio",
+  "content_type": "AUDIO",
   "content": "https://cdn.example.com/audio/loving-kindness.mp3",
   "estimated_time": 20
 }
@@ -303,7 +299,7 @@ Add a task to a specific day.
   "id": "550e8400-e29b-41d4-a716-446655440005",
   "title": "Guided Loving-Kindness Meditation",
   "description": "Practice sending love and compassion",
-  "content_type": "audio",
+  "content_type": "AUDIO",
   "content": "https://cdn.example.com/audio/loving-kindness.mp3",
   "estimated_time": 20
 }
@@ -317,7 +313,7 @@ Update a specific task.
 {
   "title": "Updated Task Title",
   "description": "Updated description",
-  "content_type": "text",
+  "content_type": "TEXT",
   "content": "Updated content",
   "estimated_time": 15
 }
@@ -352,12 +348,8 @@ Upload image for plans or tasks.
 {
   "id": "550e8400-e29b-41d4-a716-446655440007",
   "url": "https://cdn.example.com/plans/images/meditation-image.jpg",
-  "filename": "meditation-image.jpg",
-  "size": 2048576,
   "mime_type": "image/jpeg",
-  "path": "plans/images/",
-  "uploaded_at": "2024-01-20T15:00:00Z",
-  "uploaded_by": "550e8400-e29b-41d4-a716-446655440000"
+  "path": "plans/images/"
 }
 ```
 
@@ -391,12 +383,13 @@ Get plan reviews.
 }
 ```
 
-## 7. Admin Author Management Endpoints
+## 7. Author Management Endpoints
 
-### **GET /cms/admin/pending-authors**
-Get authors pending activation (Admin only).
+### **GET /cms/authors**
+Get all authors (Admin only).
 
 **Query Parameters:**
+- `verified_only`: Filter to verified authors only (default: false)
 - `skip`: Number of items to skip (default: 0)
 - `limit`: Maximum items to return (default: 20, max: 50)
 
@@ -409,64 +402,17 @@ Get authors pending activation (Admin only).
       "first_name": "Jane",
       "last_name": "Smith",
       "email": "jane@example.com",
-      "name": "Jane Smith",
-      "is_active": false,
-      "is_email_verified": true,
+      "image_url": "https://example.com/avatar.jpg",
+      "is_active": true,
+      "is_verified": true,
       "created_at": "2024-01-20T10:00:00Z",
-      "activated_at": null
+      "activated_at": "2024-01-21T09:00:00Z"
     }
   ],
   "skip": 0,
   "limit": 20,
-  "total": 5
+  "total": 1
 }
-```
-
-### **PATCH /cms/admin/authors/{author_id}/activate**
-Activate author account (Admin only).
-
-**Response (200):**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440010",
-  "first_name": "Jane",
-  "last_name": "Smith",
-  "email": "jane@example.com",
-  "name": "Jane Smith",
-  "is_active": true,
-  "is_email_verified": true,
-  "created_at": "2024-01-20T10:00:00Z",
-  "activated_at": "2024-01-21T09:00:00Z"
-}
-```
-
-### **PATCH /cms/admin/authors/{author_id}/deactivate**
-Deactivate author account (Admin only).
-
-## 8. Author Management Endpoints
-
-### **GET /cms/authors**
-Get all authors (Admin only).
-
-**Query Parameters:**
-- `verified_only`: Filter to verified authors only (default: false)
-
-**Response (200):**
-```json
-[
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440010",
-    "first_name": "Jane",
-    "last_name": "Smith",
-    "email": "jane@example.com",
-    "name": "Jane Smith",
-    "image_url": "https://example.com/avatar.jpg",
-    "is_active": true,
-    "is_email_verified": true,
-    "created_at": "2024-01-20T10:00:00Z",
-    "activated_at": "2024-01-21T09:00:00Z"
-  }
-]
 ```
 
 ### **GET /cms/authors/me**
@@ -479,11 +425,7 @@ Get current author's details.
   "first_name": "Jane",
   "last_name": "Smith",
   "email": "jane@example.com",
-  "name": "Jane Smith",
   "image_url": "https://example.com/avatar.jpg",
-  "is_active": true,
-  "is_email_verified": true,
-  "created_at": "2024-01-20T10:00:00Z",
   "plan_count": 5,
   "average_rating": 4.6,
   "bio": "Experienced meditation teacher with 10 years of practice."
@@ -496,7 +438,8 @@ Update current author's details.
 **Request Body:**
 ```json
 {
-  "name": "Jane Smith-Doe",
+  "first_name": "Jane",
+  "last_name": "Smith-Doe",
   "image_url": "https://example.com/new-avatar.jpg",
   "bio": "Updated bio with more experience details."
 }
@@ -582,24 +525,15 @@ All paginated endpoints use consistent pagination:
 ## Content Types
 
 Supported content types for tasks:
-- `text`: Text-based content
-- `audio`: Audio files and URLs
-- `video`: Video files and URLs
-- `image`: Image files and URLs
-- `source_reference`: References to Buddhist texts
+- `TEXT`: Text-based content
+- `AUDIO`: Audio files and URLs
+- `VIDEO`: Video files and URLs
+- `IMAGE`: Image files and URLs
+- `SOURCE_REFERENCE`: References to Buddhist texts
 
 ## Difficulty Levels
 
-- `beginner`: For new practitioners
-- `intermediate`: For those with some experience
-- `advanced`: For experienced practitioners
+- `BEGINNER`: For new practitioners
+- `INTERMEDIATE`: For those with some experience
+- `ADVANCED`: For experienced practitioners
 
-## Buddhist Traditions
-
-- `theravada`: Theravada Buddhism
-- `mahayana`: Mahayana Buddhism
-- `vajrayana`: Vajrayana Buddhism
-- `zen`: Zen Buddhism
-- `pure_land`: Pure Land Buddhism
-- `nichiren`: Nichiren Buddhism
-- `general`: General Buddhist teachings

@@ -1,5 +1,7 @@
 # Internal CMS Database Schema
 
+> **⚠️ DEPRECATED**: This schema has been superseded by the improved database schema. Please refer to `database-schema-improved.md` for the current implementation.
+
 ## Overview
 
 This document outlines the database schema for the internal Content Management System. The CMS uses the existing Buddhist Reading Plans schema and adds minimal CMS-specific tables for internal employee workflow management.

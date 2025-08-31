@@ -160,7 +160,7 @@ paths:
                   description: Image file (JPEG, PNG, WebP)
                 path:
                   type: string
-                  description: Storage path for the uploaded file
+                  description:  S3 folder path for the uploaded file
                   example: "plans/images/"
               required:
                 - file
@@ -290,7 +290,7 @@ paths:
     put:
       tags:
         - Plans
-      summary: Update plan (Admin/Author only)
+      summary: Update plan metadata
       parameters:
         - name: plan_id
           in: path
@@ -319,7 +319,7 @@ paths:
     delete:
       tags:
         - Plans
-      summary: Delete plan (Admin only)
+      summary: Delete plan
       parameters:
         - name: plan_id
           in: path
@@ -642,14 +642,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedReviews'
 
-
-  # Admin Author Management Endpoints
-  /cms/admin/pending-authors:
+  # Authors Endpoints
+  /cms/authors:
     get:
       tags:
-        - Admin
-      summary: Get authors pending activation (Admin only)
+        - Authors
+      summary: Get all authors (Admin only)
       parameters:
+        - name: verified_only
+          in: query
+          schema:
+            type: boolean
+            default: false
         - name: skip
           in: query
           schema:
@@ -665,83 +669,11 @@ paths:
             default: 20
       responses:
         '200':
-          description: Pending authors retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedAuthors'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-
-  /cms/admin/authors/{author_id}/activate:
-    patch:
-      tags:
-        - Admin
-      summary: Activate author account (Admin only)
-      parameters:
-        - name: author_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Author activated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Author'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /cms/admin/authors/{author_id}/deactivate:
-    patch:
-      tags:
-        - Admin
-      summary: Deactivate author account (Admin only)
-      parameters:
-        - name: author_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Author deactivated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Author'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # Authors Endpoints
-  /cms/authors:
-    get:
-      tags:
-        - Authors
-      summary: Get all authors (Admin only)
-      parameters:
-        - name: verified_only
-          in: query
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
           description: Authors retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Author'
+                $ref: '#/components/schemas/PaginatedAuthors'
 
   /cms/authors/me:
     get:
@@ -883,32 +815,21 @@ components:
 
   schemas:
     # Enums
-    BuddhistTradition:
-      type: string
-      enum:
-        - theravada
-        - mahayana
-        - vajrayana
-        - zen
-        - pure_land
-        - nichiren
-        - general
-
     DifficultyLevel:
       type: string
       enum:
-        - beginner
-        - intermediate
-        - advanced
+        - BEGINNER
+        - INTERMEDIATE
+        - ADVANCED
 
     ContentType:
       type: string
       enum:
-        - text
-        - audio
-        - video
-        - image
-        - source_reference
+        - TEXT
+        - AUDIO
+        - VIDEO
+        - IMAGE
+        - SOURCE_REFERENCE
 
 
     # Authentication Schemas
@@ -918,12 +839,14 @@ components:
         email:
           type: string
           format: email
-        password:
+        hashed_password:
           type: string
-          minLength: 6
+          description: SHA-256 hash of password + email
+          pattern: '^[a-f0-9]{64}$'
+          example: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
       required:
         - email
-        - password
+        - hashed_password
 
     RegisterRequest:
       type: object
@@ -935,7 +858,7 @@ components:
         email:
           type: string
           format: email
-        password:
+        hash_password:
           type: string
           minLength: 6
       required:
@@ -957,7 +880,7 @@ components:
         status:
           type: string
           enum:
-            - pending_verification
+            - PENDING_VERIFICATION
         message:
           type: string
           example: "Registration successful. Please check your email to verify your account."
@@ -986,7 +909,7 @@ components:
         status:
           type: string
           enum:
-            - verified_pending_activation
+            - VERIFIED_PENDING_ACTIVATION
         message:
           type: string
           example: "Email verified successfully. Your account is pending admin approval."
@@ -1015,12 +938,6 @@ components:
           type: string
           format: uri
           description: Public URL to access the uploaded image
-        filename:
-          type: string
-          description: Original filename of the uploaded file
-        size:
-          type: integer
-          description: File size in bytes
         mime_type:
           type: string
           description: MIME type of the uploaded file
@@ -1028,23 +945,11 @@ components:
         path:
           type: string
           description: Storage path where the file was uploaded
-        uploaded_at:
-          type: string
-          format: date-time
-          description: Timestamp when the file was uploaded
-        uploaded_by:
-          type: string
-          format: uuid
-          description: ID of the author who uploaded the file
       required:
         - id
         - url
-        - filename
-        - size
         - mime_type
         - path
-        - uploaded_at
-        - uploaded_by
 
     LoginResponse:
       type: object
@@ -1064,23 +969,10 @@ components:
           type: string
         last_name:
           type: string
-        name:
-          type: string
-        email:
-          type: string
-          format: email
-        avatar_url:
-          type: string
-          format: uri
-        is_active:
-          type: boolean
       required:
         - id
         - first_name
         - last_name
-        - name
-        - email
-        - is_active
 
     TokenResponse:
       type: object
@@ -1142,33 +1034,6 @@ components:
       required:
         - status
 
-    PlanDetail:
-      allOf:
-        - $ref: '#/components/schemas/Plan'
-        - type: object
-          properties:
-            author:
-              $ref: '#/components/schemas/Author'
-            language:
-              type: string
-              example: "en"
-            tradition:
-              $ref: '#/components/schemas/BuddhistTradition'
-            difficulty_level:
-              $ref: '#/components/schemas/DifficultyLevel'
-            featured:
-              type: boolean
-            estimated_daily_minutes:
-              type: integer
-            preview_content:
-              type: string
-            average_rating:
-              type: number
-              format: float
-              minimum: 1
-              maximum: 5
-            review_count:
-              type: integer
 
     PlanCreate:
       type: object
@@ -1365,6 +1230,20 @@ components:
         total:
           type: integer
 
+    PaginatedAuthors:
+      type: object
+      properties:
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorAdmin'
+        skip:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+
     # Review Schemas
     Review:
       type: object
@@ -1391,19 +1270,6 @@ components:
         created_at:
           type: string
           format: date-time
-
-    ReviewCreate:
-      type: object
-      properties:
-        rating:
-          type: integer
-          minimum: 1
-          maximum: 5
-        review_text:
-          type: string
-          maxLength: 1000
-      required:
-        - rating
 
     PaginatedReviews:
       type: object
@@ -1433,15 +1299,34 @@ components:
         email:
           type: string
           format: email
-        name:
+        image_url:
           type: string
-          description: Display name (can be derived from first_name + last_name)
+          format: uri
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+
+    AuthorAdmin:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
         image_url:
           type: string
           format: uri
         is_active:
           type: boolean
-        is_email_verified:
+        is_verified:
           type: boolean
         created_at:
           type: string
@@ -1455,9 +1340,8 @@ components:
         - first_name
         - last_name
         - email
-        - name
         - is_active
-        - is_email_verified
+        - is_verified
         - created_at
 
     AuthorDetail:
@@ -1473,32 +1357,14 @@ components:
             bio:
               type: string
 
-    AuthorCreate:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-        image_url:
-          type: string
-          format: uri
-        bio:
-          type: string
-          maxLength: 1000
-        is_verified:
-          type: boolean
-          default: false
-        is_active:
-          type: boolean
-          default: true
-
     AuthorUpdate:
       type: object
       properties:
-        name:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        last_name:
           type: string
           minLength: 1
           maxLength: 100
@@ -1508,10 +1374,6 @@ components:
         bio:
           type: string
           maxLength: 1000
-        is_verified:
-          type: boolean
-        is_active:
-          type: boolean
 
     AuthorPlansResponse:
       type: object
@@ -1522,20 +1384,6 @@ components:
             $ref: '#/components/schemas/Plan'
       required:
         - plans
-
-    PaginatedAuthors:
-      type: object
-      properties:
-        authors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Author'
-        skip:
-          type: integer
-        limit:
-          type: integer
-        total:
-          type: integer
 
     # Error Schemas
     Error:
@@ -1549,18 +1397,6 @@ components:
         - error
         - message
 
-    ValidationError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: "validation_failed"
-        message:
-          type: string
-          example: "Request validation failed"
-      required:
-        - error
-        - message
 
   responses:
     BadRequest:
@@ -1603,21 +1439,9 @@ components:
             error: "not_found"
             message: "The requested resource was not found"
 
-    InternalServerError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: "internal_server_error"
-            message: "An unexpected error occurred"
-
 tags:
   - name: Authentication
     description: User login, registration, and email verification
-  - name: Admin
-    description: Admin user management and activation
   - name: Media
     description: Image and file upload management
   - name: Plans
