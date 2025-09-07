@@ -60,8 +60,6 @@ CREATE TABLE plans (
     
     -- Classification with validation
     difficulty_level difficulty_level NOT NULL,
-    duration_days INTEGER NOT NULL,
-    estimated_daily_minutes INTEGER,
     
     -- Flexible categorization with validation
     tags JSONB DEFAULT '[]'::jsonb NOT NULL CHECK (jsonb_typeof(tags) = 'array'),
@@ -206,7 +204,6 @@ CREATE TABLE plan_reviews (
     -- Moderation
     is_approved BOOLEAN DEFAULT FALSE,
     approved_by VARCHAR(255), -- Email of approver
-    moderated_by VARCHAR(255), -- Email of moderator
     
     -- Soft delete
     deleted_at TIMESTAMPTZ NULL,

@@ -1,11 +1,12 @@
 openapi: 3.0.3
 info:
-  title: Buddhist Reading Plans API
+  title: Buddhist Reading Plans Public API
   description: |
-    API for managing Buddhist reading plans, user progress tracking, and content delivery.
+    Public API for Buddhist reading plans consumption, user progress tracking, and reviews.
+    This API is designed for mobile apps and websites to consume content.
     
     ## Authentication
-    Most endpoints require JWT authentication. Include the token in the Authorization header:
+    User-specific endpoints require JWT authentication. Include the token in the Authorization header:
     `Authorization: Bearer <your-jwt-token>`
     
     ## Rate Limiting
@@ -15,15 +16,15 @@ info:
   version: 1.0.0
   contact:
     name: API Support
-    email: api-support@buddhist-plans.com
+    email: api-support@webuddhist.com
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: https://api.buddhist-plans.com/v1
+  - url: https://api.webuddhist.com/v1
     description: Production server
-  - url: https://staging-api.buddhist-plans.com/v1
+  - url: https://staging-api.webuddhist.com/v1
     description: Staging server
   - url: http://localhost:8000/v1
     description: Development server
@@ -44,27 +45,17 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/DifficultyLevel'
-        - name: tags
-          in: query
-          description: Comma-separated list of tags
-          schema:
-            type: string
-            example: "meditation,compassion"
-        - name: featured
-          in: query
-          schema:
-            type: boolean
         - name: search
           in: query
           description: Search in title and description
           schema:
             type: string
-        - name: page
+        - name: skip
           in: query
           schema:
             type: integer
-            minimum: 1
-            default: 1
+            minimum: 0
+            default: 0
         - name: limit
           in: query
           schema:
@@ -80,27 +71,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedPlans'
 
-    post:
-      tags:
-        - Plans
-      summary: Create a new plan (Admin/Author only)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlanCreate'
-      responses:
-        '201':
-          description: Plan created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Plan'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
 
   /plans/{plan_id}:
     get:
@@ -124,58 +94,13 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-    put:
-      tags:
-        - Plans
-      summary: Update plan (Admin/Author only)
-      parameters:
-        - name: plan_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlanUpdate'
-      responses:
-        '200':
-          description: Plan updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Plan'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
-    delete:
-      tags:
-        - Plans
-      summary: Delete plan (Admin only)
-      parameters:
-        - name: plan_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Plan deleted successfully
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # Plan Items Endpoints
-  /plans/{plan_id}/items:
+  # Plan Days Endpoints
+  /plans/{plan_id}/days:
     get:
       tags:
-        - Plan Items
-      summary: Get plan items (days)
+        - Plan Days
+      summary: Get plan days
       security: []
       parameters:
         - name: plan_id
@@ -185,49 +110,25 @@ paths:
             type: integer
       responses:
         '200':
-          description: Plan items retrieved successfully
+          description: Plan days retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PlanItem'
+                $ref: '#/components/schemas/PlanDaysResponse'
 
-    post:
-      tags:
-        - Plan Items
-      summary: Add item to plan (Admin/Author only)
-      parameters:
-        - name: plan_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlanItemCreate'
-      responses:
-        '201':
-          description: Plan item created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlanItem'
 
-  /plans/{plan_id}/items/{day_number}:
+  /plans/{plan_id}/days/{day_number}:
     get:
       tags:
-        - Plan Items
+        - Plan Days
       summary: Get specific day's content
       parameters:
         - name: plan_id
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
         - name: day_number
           in: path
           required: true
@@ -258,9 +159,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserPlanProgress'
+                $ref: '#/components/schemas/PaginatedPlans'
 
     post:
       tags:
@@ -274,7 +173,8 @@ paths:
               type: object
               properties:
                 plan_id:
-                  type: integer
+                  type: string
+                  format: uuid
               required:
                 - plan_id
       responses:
@@ -283,7 +183,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPlanProgress'
+                $ref: '#/components/schemas/PaginatedPlans'
         '409':
           description: Already enrolled in this plan
 
@@ -378,12 +278,12 @@ paths:
           required: true
           schema:
             type: integer
-        - name: page
+        - name: skip
           in: query
           schema:
             type: integer
-            minimum: 1
-            default: 1
+            minimum: 0
+            default: 0
         - name: limit
           in: query
           schema:
@@ -447,27 +347,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Author'
-    post:
-      tags:
-        - Authors
-      summary: Create a new author (Admin only)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthorCreate'
-      responses:
-        '201':
-          description: Author created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Author'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
 
   /authors/{author_id}:
     get:
@@ -490,54 +369,6 @@ paths:
                 $ref: '#/components/schemas/AuthorDetail'
         '404':
           $ref: '#/components/responses/NotFound'
-    put:
-      tags:
-        - Authors
-      summary: Update author (Admin only)
-      parameters:
-        - name: author_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthorUpdate'
-      responses:
-        '200':
-          description: Author updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Author'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    delete:
-      tags:
-        - Authors
-      summary: Delete author (Admin only)
-      parameters:
-        - name: author_id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Author deleted successfully
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          description: Cannot delete author with existing plans
 
   /authors/{author_id}/plans:
     get:
@@ -573,18 +404,18 @@ components:
     DifficultyLevel:
       type: string
       enum:
-        - beginner
-        - intermediate
-        - advanced
+        - BEGINNER
+        - INTERMEDIATE
+        - ADVANCED
 
     ContentType:
       type: string
       enum:
-        - text
-        - audio
-        - video
-        - image
-        - source_reference
+        - TEXT
+        - AUDIO
+        - VIDEO
+        - IMAGE
+        - SOURCE_REFERENCE
 
     UserPlanStatus:
       type: string
@@ -600,7 +431,8 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         email:
           type: string
           format: email
@@ -615,37 +447,34 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         title:
           type: string
         description:
           type: string
-        author:
-          $ref: '#/components/schemas/Author'
-        language:
-          type: string
-          example: "en"
-        difficulty_level:
-          $ref: '#/components/schemas/DifficultyLevel'
-        tags:
-          type: array
-          items:
-            type: string
-        featured:
-          type: boolean
-        is_active:
-          type: boolean
         image_url:
           type: string
           format: uri
+        total_days:
+          type: integer
+        difficulty_level:
+          $ref: '#/components/schemas/DifficultyLevel'
+        language:
+          type: string
+          example: "en"
+      required:
+        - id
+        - title
+        - description
+        - total_days
+        - difficulty_level
 
     PlanDetail:
       allOf:
         - $ref: '#/components/schemas/Plan'
         - type: object
           properties:
-            total_days:
-              type: integer
             average_rating:
               type: number
               format: float
@@ -655,135 +484,132 @@ components:
               type: integer
             enrollment_count:
               type: integer
+            tags:
+              type: array
+              items:
+                type: string
 
-    PlanCreate:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 255
-        description:
-          type: string
-        language:
-          type: string
-          default: "en"
-        difficulty_level:
-          $ref: '#/components/schemas/DifficultyLevel'
-        tags:
-          type: array
-          items:
-            type: string
-        image_url:
-          type: string
-          format: uri
-      required:
-        - title
-        - difficulty_level
-
-    PlanUpdate:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 255
-        description:
-          type: string
-        difficulty_level:
-          $ref: '#/components/schemas/DifficultyLevel'
-        tags:
-          type: array
-          items:
-            type: string
-        featured:
-          type: boolean
-        is_active:
-          type: boolean
-        image_url:
-          type: string
-          format: uri
 
     PaginatedPlans:
       type: object
       properties:
-        items:
+        plans:
           type: array
           items:
             $ref: '#/components/schemas/Plan'
-        total:
-          type: integer
-        page:
+        skip:
           type: integer
         limit:
           type: integer
-        total_pages:
+        total:
           type: integer
 
-    # Plan Item Schemas
-    PlanItem:
+    # Plan Day Schemas (renamed from PlanItem to match CMS)
+    PlanDay:
       type: object
       properties:
         id:
-          type: integer
-        plan_id:
-          type: integer
+          type: string
+          format: uuid
         day_number:
           type: integer
-        created_at:
+        title:
+          type: string
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        is_completed:
+          type: boolean
+          description: "Only present when user is authenticated and enrolled in this plan"
+        completed_at:
           type: string
           format: date-time
+          description: "Only present when user is authenticated and enrolled in this plan"
+      required:
+        - id
+        - day_number
+        - title
+        - tasks
 
     PlanItemDetail:
-      allOf:
-        - $ref: '#/components/schemas/PlanItem'
-        - type: object
-          properties:
-            tasks:
-              type: array
-              items:
-                $ref: '#/components/schemas/Task'
+      $ref: '#/components/schemas/PlanDay'
 
-    PlanItemCreate:
+    PlanDayBasic:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         day_number:
           type: integer
-          minimum: 1
+        title:
+          type: string
+        is_completed:
+          type: boolean
+          description: "Only present when user is authenticated and enrolled in this plan"
+        completed_at:
+          type: string
+          format: date-time
+          description: "Only present when user is authenticated and enrolled in this plan"
       required:
+        - id
         - day_number
+        - title
+
+    PlanDaysResponse:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanDayBasic'
+      required:
+        - days
+
 
     # Task Schemas
     Task:
       type: object
       properties:
         id:
-          type: integer
-        plan_item_id:
-          type: integer
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
         content_type:
           $ref: '#/components/schemas/ContentType'
         content:
           type: string
-        display_order:
-          type: integer
         estimated_time:
           type: integer
-        is_required:
-          type: boolean
+          description: "Estimated time in minutes"
         is_completed:
           type: boolean
-          description: "Only present when user is authenticated"
+          description: "Only present when user is authenticated and enrolled in this plan"
+        completed_at:
+          type: string
+          format: date-time
+          description: "Only present when user is authenticated and enrolled in this plan"
+      required:
+        - id
+        - title
+        - content_type
 
     TaskCompletion:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         user_id:
-          type: integer
+          type: string
+          format: uuid
         task_id:
-          type: integer
+          type: string
+          format: uuid
         completed_at:
           type: string
           format: date-time
@@ -793,11 +619,14 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         user_id:
-          type: integer
+          type: string
+          format: uuid
         plan_id:
-          type: integer
+          type: string
+          format: uuid
         plan:
           $ref: '#/components/schemas/Plan'
         started_at:
@@ -824,16 +653,67 @@ components:
         status:
           $ref: '#/components/schemas/UserPlanStatus'
 
+    UserPlanProgressSummary:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/UserPlanStatus'
+        days_completed:
+          type: integer
+          description: "Number of days completed in this plan"
+        current_day:
+          type: integer
+          description: "Current day the user is on (1-based)"
+        streak_count:
+          type: integer
+          description: "Current consecutive days streak"
+        longest_streak:
+          type: integer
+          description: "Longest streak achieved in this plan"
+        completion_percentage:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: "Percentage of plan completed (0-100)"
+        started_at:
+          type: string
+          format: date-time
+          description: "When the user enrolled in this plan"
+        last_activity_at:
+          type: string
+          format: date-time
+          description: "Last time user completed any task in this plan"
+        is_completed:
+          type: boolean
+          description: "Whether the user has completed the entire plan"
+        completed_at:
+          type: string
+          format: date-time
+          description: "When the user completed the plan (if completed)"
+      required:
+        - status
+        - days_completed
+        - current_day
+        - streak_count
+        - longest_streak
+        - completion_percentage
+        - started_at
+        - is_completed
+
     # Favorites Schemas
     Favorite:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         user_id:
-          type: integer
+          type: string
+          format: uuid
         plan_id:
-          type: integer
+          type: string
+          format: uuid
         created_at:
           type: string
           format: date-time
@@ -843,11 +723,14 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
         plan_id:
-          type: integer
+          type: string
+          format: uuid
         user_id:
-          type: integer
+          type: string
+          format: uuid
         user_name:
           type: string
         rating:
@@ -878,17 +761,15 @@ components:
     PaginatedReviews:
       type: object
       properties:
-        items:
+        reviews:
           type: array
           items:
             $ref: '#/components/schemas/Review'
-        total:
-          type: integer
-        page:
+        skip:
           type: integer
         limit:
           type: integer
-        total_pages:
+        total:
           type: integer
 
     # Author Schemas
@@ -896,8 +777,11 @@ components:
       type: object
       properties:
         id:
-          type: integer
-        name:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
           type: string
         email:
           type: string
@@ -905,6 +789,8 @@ components:
         image_url:
           type: string
           format: uri
+        bio:
+          type: string
         is_verified:
           type: boolean
         is_active:
@@ -923,45 +809,6 @@ components:
             bio:
               type: string
 
-    AuthorCreate:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-        image_url:
-          type: string
-          format: uri
-        bio:
-          type: string
-          maxLength: 1000
-        is_verified:
-          type: boolean
-          default: false
-        is_active:
-          type: boolean
-          default: true
-
-    AuthorUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-        image_url:
-          type: string
-          format: uri
-        bio:
-          type: string
-          maxLength: 1000
-        is_verified:
-          type: boolean
-        is_active:
-          type: boolean
 
     # Error Schemas
     Error:
@@ -1044,7 +891,7 @@ components:
 tags:
   - name: Plans
     description: Buddhist reading plans management
-  - name: Plan Items
+  - name: Plan Days
     description: Daily content within plans
   - name: User Progress
     description: User enrollment and progress tracking
