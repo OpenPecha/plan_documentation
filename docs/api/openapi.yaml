@@ -83,7 +83,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: Plan details
@@ -107,7 +108,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: Plan days retrieved successfully
@@ -197,7 +199,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: User plan progress
@@ -215,7 +218,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -241,7 +245,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '201':
           description: Task marked as completed
@@ -260,7 +265,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '204':
           description: Task completion removed
@@ -277,7 +283,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
         - name: skip
           in: query
           schema:
@@ -308,7 +315,8 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -579,13 +587,14 @@ components:
           type: string
         description:
           type: string
-        content_type:
-          $ref: '#/components/schemas/ContentType'
-        content:
-          type: string
         estimated_time:
           type: integer
           description: "Estimated time in minutes"
+        subtasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subtask'
+          description: "List of subtasks within this task"
         is_completed:
           type: boolean
           description: "Only present when user is authenticated and enrolled in this plan"
@@ -596,7 +605,25 @@ components:
       required:
         - id
         - title
+
+    Subtask:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content_type:
+          $ref: '#/components/schemas/ContentType'
+        content:
+          type: string
+        display_order:
+          type: integer
+          description: "Order in which this subtask should be displayed (1-based)"
+      required:
+        - id
         - content_type
+        - content
+        - display_order
 
     TaskCompletion:
       type: object
